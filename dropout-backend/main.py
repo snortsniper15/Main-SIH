@@ -5,6 +5,17 @@ import pickle
 import numpy as np
 from database import SessionLocal, engine, Base
 import models, schemas
+from fastapi.responses import JSONResponse
+from mangum import Mangum
+
+app = FastAPI()
+
+@app.get("/")
+def read_root():
+    return {"message": "Hello from FastAPI on Vercel"}
+
+# Required for Vercel
+handler = Mangum(app)
 
 # Create tables
 Base.metadata.create_all(bind=engine)
