@@ -6,7 +6,7 @@ from mangum import Mangum
 import pickle
 import numpy as np
 
-from database import SessionLocal, engine, Base
+from dropout-backend.database import SessionLocal, engine, Base
 import models, schemas
 
 # ✅ Initialize app only once
