@@ -1,44 +1,24 @@
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
+from mangum import Mangum
 import pickle
 import numpy as np
+
 from database import SessionLocal, engine, Base
 import models, schemas
-from fastapi.responses import JSONResponse
-from mangum import Mangum
 
-app = FastAPI()
-
-@app.get("/")
-def read_root():
-    return {"message": "Hello from FastAPI on Vercel"}
-
-# Required for Vercel
-handler = Mangum(app)
-
-# Create tables
-Base.metadata.create_all(bind=engine)
-
-# Load dummy ML model
-with open("model.pkl", "rb") as f:
-    model = pickle.load(f)
-
+# Initialize FastAPI app once
 app = FastAPI(title="Dropout Prediction API with DB")
 
-# CORS for React frontend
-from fastapi.middleware.cors import CORSMiddleware
-
+# CORS setup (for local React dev)
 origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://localhost:3001",
     "http://127.0.0.1:3001"
 ]
-
-@app.get("/favicon.ico")
-async def favicon():
-    return JSONResponse(content=None, status_code=204)
 
 app.add_middleware(
     CORSMiddleware,
@@ -48,6 +28,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Handle favicon request to avoid 500s
+@app.get("/favicon.ico")
+async def favicon():
+    return JSONResponse(content=None, status_code=204)
+
+# Home route
+@app.get("/")
+def home_page():
+    return {"message": "Welcome to the Dropout Prediction API 🚀"}
+
+# Ensure DB tables exist
+Base.metadata.create_all(bind=engine)
+
+# Load your ML model
+with open("model.pkl", "rb") as f:
+    model = pickle.load(f)
 
 # DB dependency
 def get_db():
@@ -57,10 +53,7 @@ def get_db():
     finally:
         db.close()
 
-@app.get("/")
-def home_page():
-    return {"message": "Welcome to the Dropout Prediction API 🚀"}
-
+# Predict dropout risk
 @app.post("/predict", response_model=schemas.PredictionResponse)
 def predict(data: schemas.StudentData, db: Session = Depends(get_db)):
     features = np.array([[data.gpa, data.attendance, data.assignments_submitted, data.participation_score]])
@@ -81,16 +74,21 @@ def predict(data: schemas.StudentData, db: Session = Depends(get_db)):
 
     return {"dropout_risk": round(float(probability), 3), "advice": advice}
 
+# View logs
 @app.get("/logs", response_model=list[schemas.PredictionLogOut])
 def get_logs(db: Session = Depends(get_db)):
     return db.query(models.PredictionLog).all()
 
+# Update counselor action
 @app.put("/logs/{log_id}", response_model=schemas.PredictionLogOut)
 def update_counselor_action(log_id: int, update: schemas.CounselorUpdate, db: Session = Depends(get_db)):
     log = db.query(models.PredictionLog).filter(models.PredictionLog.id == log_id).first()
     if not log:
-        return {"error": "Log not found"}
+        return JSONResponse(content={"error": "Log not found"}, status_code=404)
     log.counselor_action = update.counselor_action
     db.commit()
     db.refresh(log)
     return log
+
+# For Vercel compatibility
+handler = Mangum(app)
