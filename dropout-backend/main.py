@@ -9,10 +9,10 @@ import numpy as np
 from database import SessionLocal, engine, Base
 import models, schemas
 
-# Initialize FastAPI app once
+# ✅ Initialize app only once
 app = FastAPI(title="Dropout Prediction API with DB")
 
-# CORS setup (for local React dev)
+# ✅ Middleware for CORS
 origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
@@ -28,24 +28,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Handle favicon request to avoid 500s
+# ✅ Handle favicon
 @app.get("/favicon.ico")
 async def favicon():
     return JSONResponse(content=None, status_code=204)
 
-# Home route
+# ✅ Home route
 @app.get("/")
 def home_page():
     return {"message": "Welcome to the Dropout Prediction API 🚀"}
 
-# Ensure DB tables exist
+# ✅ Setup database
 Base.metadata.create_all(bind=engine)
 
-# Load your ML model
+# ✅ Load model
 with open("model.pkl", "rb") as f:
     model = pickle.load(f)
 
-# DB dependency
+# ✅ Dependency
 def get_db():
     db = SessionLocal()
     try:
@@ -53,7 +53,7 @@ def get_db():
     finally:
         db.close()
 
-# Predict dropout risk
+# ✅ Predict endpoint
 @app.post("/predict", response_model=schemas.PredictionResponse)
 def predict(data: schemas.StudentData, db: Session = Depends(get_db)):
     features = np.array([[data.gpa, data.attendance, data.assignments_submitted, data.participation_score]])
@@ -74,12 +74,12 @@ def predict(data: schemas.StudentData, db: Session = Depends(get_db)):
 
     return {"dropout_risk": round(float(probability), 3), "advice": advice}
 
-# View logs
+# ✅ View logs
 @app.get("/logs", response_model=list[schemas.PredictionLogOut])
 def get_logs(db: Session = Depends(get_db)):
     return db.query(models.PredictionLog).all()
 
-# Update counselor action
+# ✅ Update counselor action
 @app.put("/logs/{log_id}", response_model=schemas.PredictionLogOut)
 def update_counselor_action(log_id: int, update: schemas.CounselorUpdate, db: Session = Depends(get_db)):
     log = db.query(models.PredictionLog).filter(models.PredictionLog.id == log_id).first()
@@ -90,5 +90,5 @@ def update_counselor_action(log_id: int, update: schemas.CounselorUpdate, db: Se
     db.refresh(log)
     return log
 
-# For Vercel compatibility
+# ✅ VERY IMPORTANT: Final line must define `handler`
 handler = Mangum(app)
