@@ -2,14 +2,14 @@
   "version": 2,
   "builds": [
     {
-      "src": "dropout-backend/main.py",
+      "src": "dropout_backend/main.py",
       "use": "@vercel/python"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "dropout-backend/main.py"
+      "dest": "dropout_backend/main.py"
     }
   ]
 }

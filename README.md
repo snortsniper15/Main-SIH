@@ -17,7 +17,7 @@ An AI-powered system to predict student dropout risk and provide counseling advi
 
 ```
 Main-SIH/
-├── dropout-backend/
+├── dropout_backend/
 ├── dropout-frontend/
 └── run_project.bat
 ```
@@ -29,7 +29,7 @@ Main-SIH/
 ### Backend
 
 ```bash
-cd Main-SIH/dropout-backend
+cd Main-SIH/dropout_backend
 python -m venv venv
 venv\Scripts\activate.bat
 pip install -r requirements.txt

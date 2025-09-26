@@ -3,7 +3,7 @@ title Dropout Prediction & Counseling System
 echo 🚀 Starting Backend and Frontend...
 
 REM --- Start Backend ---
-cd dropout-backend
+cd dropout_backend
 call venv\Scripts\activate.bat
 start cmd /k "uvicorn main:app --reload --host 127.0.0.1 --port 8000"
 
