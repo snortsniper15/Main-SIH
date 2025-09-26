@@ -36,6 +36,10 @@ origins = [
     "http://127.0.0.1:3001"
 ]
 
+@app.get("/favicon.ico")
+async def favicon():
+    return JSONResponse(content=None, status_code=204)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
